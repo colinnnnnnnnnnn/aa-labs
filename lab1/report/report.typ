@@ -450,3 +450,8 @@ Fast Doubling Formula is one of the best formulas with its $O(log(n))$ time comp
 
     The Fast Doubling Formula method, being the easiest to execute with a logarithmic time complexity, could be used
     when computing very large numbers of the series. 
+
+= ANNEX
+
+#show link: underline
+_#link("https://github.com/colinnnnnnnnnnn/aa-labs/tree/master/lab1")[Github Repository]_

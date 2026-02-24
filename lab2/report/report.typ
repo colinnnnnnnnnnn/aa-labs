@@ -320,3 +320,8 @@ Overall, radix sort is preferable when keys are non-negative integers with bound
 while quick sort is a strong general-purpose choice for in-memory sorting due to its practical speed and
 in-place behavior. Merge sort offers predictable performance and stability, and heap sort provides
 consistent $O(n log n)$ time with minimal extra space.
+
+= ANNEX
+
+#show link: underline
+_#link("https://github.com/colinnnnnnnnnnn/aa-labs/tree/master/lab2")[Github Repository]_

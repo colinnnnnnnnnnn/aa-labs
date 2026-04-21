@@ -216,10 +216,10 @@ def display_results_table(results):
     table = PrettyTable()
     table.field_names = [
         "Nodes",
-        "Dijkstra\n(Sparse)",
-        "Dijkstra\n(Dense)",
-        "Floyd-W\n(Sparse)",
-        "Floyd-W\n(Dense)"
+        "Dijkstra (Sparse)",
+        "Dijkstra (Dense)",
+        "Floyd-W (Sparse)",
+        "Floyd-W (Dense)"
     ]
     
     for i, n in enumerate(results['nodes']):
@@ -238,10 +238,10 @@ def display_results_table(results):
     table_std = PrettyTable()
     table_std.field_names = [
         "Nodes",
-        "Dijkstra\n(Sparse) ±",
-        "Dijkstra\n(Dense) ±",
-        "Floyd-W\n(Sparse) ±",
-        "Floyd-W\n(Dense) ±"
+        "Dijkstra (Sparse)",
+        "Dijkstra (Dense)",
+        "Floyd-W (Sparse)",
+        "Floyd-W (Dense)"
     ]
     
     for i, n in enumerate(results['nodes']):
@@ -261,10 +261,10 @@ def display_results_table(results):
     table_ratio = PrettyTable()
     table_ratio.field_names = [
         "Nodes",
-        "Dijkstra better on\nSparse vs Dense",
-        "Floyd-W better on\nSparse vs Dense",
-        "Dijkstra vs Floyd-W\n(Sparse)",
-        "Dijkstra vs Floyd-W\n(Dense)"
+        "Dijkstra (Sparse vs Dense)",
+        "Floyd-W (Sparse vs Dense)",
+        "Dijkstra vs Floyd-W (Sparse)",
+        "Dijkstra vs Floyd-W (Dense)"
     ]
     
     for i, n in enumerate(results['nodes']):

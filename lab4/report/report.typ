@@ -5,8 +5,8 @@
 ])
 
 #show: temp.with(
-  lab-number: "3",
-  title: "Empirical analysis of algorithms: Depth First Search (DFS), Breadth First Search (BFS)",
+  lab-number: "4",
+  title: "Dynamic Programming: Dijkstra and Floyd-Warshall Algorithms",
   year: "2026",
   group: "FAF-243",
   name: "Poiata Calin"
@@ -16,277 +16,282 @@
 
 == Objective
 
-Study and empirically analyze the performance of graph traversal algorithms --- Depth First Search
-(DFS) and Breadth First Search (BFS) --- across a variety of graph structures, measuring the time
-required to locate a target node.
+Study dynamic programming techniques through the implementation and empirical analysis of
+Dijkstra and Floyd-Warshall shortest-path algorithms on sparse and dense graphs.
 
 == Tasks
 
 #block[
     #set enum(indent: 3em)
-1. Implement DFS and BFS graph traversal algorithms in Python;
-2. Establish the properties of the input data (graph type, size, target placement) against
-   which the analysis is performed;
-3. Choose a metric for comparing the algorithms;
-4. Perform empirical analysis of the proposed algorithms across seven distinct graph scenarios;
-5. Present the results in a table and graphically using a bar chart;
-6. Draw conclusions from the obtained data.
+1. Study the dynamic programming method of algorithm design;
+2. Implement Dijkstra and Floyd-Warshall shortest-path algorithms in Python;
+3. Perform empirical analysis for sparse and dense graphs;
+4. Increase the number of nodes and analyze the impact on execution time;
+5. Present experimental results in tables and graphical form;
+6. Formulate conclusions based on the obtained data.
 ]
 
 == Theoretical Notes
 
-Graph traversal algorithms systematically visit every reachable node from a starting point.
-Empirical analysis measures real execution time on concrete graph instances, complementing
-theoretical complexity bounds by revealing the influence of graph structure and target placement.
+Dynamic programming solves complex problems by decomposing them into overlapping
+subproblems, storing partial results, and combining them to build an optimal global answer.
+
+For shortest paths:
+
+- *Dijkstra* uses optimal substructure from a source node. Once the shortest distance to a node
+  is finalized, it is not improved later (for non-negative weights).
+- *Floyd-Warshall* is a classic all-pairs dynamic programming algorithm with state
+    `dist[i][j][k]`: the shortest path from $i$ to $j$ using only intermediate nodes from
+  ${1, 2, ..., k}$.
 
 Standard methodology:
 
 #block[
     #set enum(indent: 3em)
-1. Define the analysis goal (time to reach a target node).
+1. Define the analysis objective (execution time of shortest-path algorithms).
 2. Select a metric (average wall-clock time in milliseconds).
-3. Specify input properties (graph type, number of nodes and edges, start and target nodes).
+3. Define input properties (graph density and number of nodes).
 4. Implement the algorithms.
-5. Generate test graphs representative of practical use cases.
-6. Execute experiments with multiple repetitions and record results.
+5. Generate sparse and dense weighted directed graphs.
+6. Execute experiments for increasing graph sizes and multiple trials.
 7. Analyse, tabulate, and visualise the measurements.
 ]
 
 == Introduction
 
-Depth First Search and Breadth First Search are the two canonical graph traversal strategies.
-BFS explores all neighbors of a node before proceeding to their children, advancing level by level.
-DFS follows each branch as far as possible before backtracking. Both run in $O(V + E)$ time in
-general, but their practical performance differs significantly depending on graph topology and
-the relative position of the target node.
+Dijkstra and Floyd-Warshall solve related shortest-path problems but target different use cases.
+Dijkstra computes shortest paths from one source to all nodes and is highly efficient on sparse
+graphs when implemented with a priority queue. Floyd-Warshall computes shortest paths between
+all pairs of nodes and has a cubic time complexity, making it significantly more expensive as
+the graph grows.
 
-- *BFS* uses a FIFO queue whose size can grow to $O(V)$ in wide or dense graphs.
-- *DFS* uses a LIFO stack whose depth can reach $O(V)$ in deep or chain-like graphs.
+This laboratory examines:
 
-Understanding how these structural differences translate to real execution time for different
-graph shapes is the subject of this laboratory work.
+- the impact of graph density (sparse vs dense),
+- the impact of increasing number of nodes,
+- and the practical gap between asymptotic complexity and measured runtime.
 
 == Comparison Metric
 
-The primary metric is the *average wall-clock execution time* (milliseconds) for the search
-function to find (or confirm the absence of) a target node. Each scenario is repeated five times
-and the mean is recorded. The number of expanded nodes and peak frontier size are also tracked
-internally but the main comparison is based on timing.
+The primary metric is *average wall-clock execution time* (seconds), measured with
+`time.perf_counter()`. Standard deviation is also recorded to estimate run-to-run variation.
+
+Additional derived metrics are included:
+
+- Dijkstra dense/sparse runtime ratio,
+- Floyd-Warshall dense/sparse runtime ratio,
+- Dijkstra/Floyd-Warshall ratio on sparse and dense graphs.
 
 == Input Data
 
-Seven distinct graph categories are used as inputs:
+The benchmark script tests the following node sizes:
+
+- $N in {10, 20, 50, 100, 150, 200}$
+
+For each size, two directed weighted graphs are generated:
 
 #block[
     #set enum(indent: 3em)
-1. *Chain / Path graph* --- a linear sequence of $N = 20,000$ nodes. The target is at the
-   far end (node 19,999). This stresses DFS stack depth and BFS queue width equally,
-   forcing both algorithms to traverse the entire chain.
-2. *Balanced Tree* --- a tree of depth 9 with branching factor 3 (#sym.tilde 9,841 nodes). The target
-   is the deepest leaf. This tests the impact of branching on frontier growth and memory.
-3. *Dense / Complete graph* --- every node connected to every other node ($N = 2,000$,
-   $E = 1,999,000$). The target is the last node. BFS enqueues almost the entire graph
-   in the first step.
-4. *Grid graph* --- a $120 times 120$ grid (14,400 nodes). The target is the opposite corner.
-   This models realistic 2-D pathfinding, where both algorithms must cover significant area.
-5. *Deep vs Shallow target* --- the same balanced binary tree (depth 10, 1,023 nodes) is
-   searched twice: once for a shallow target (node 1, direct child of root) and once for the
-   deepest leaf. Isolates the effect of target depth on search time.
-6. *Large Random graph* --- $N = 4,500$ nodes with edge probability $p = 0.0015$
-   (sparse, seed-controlled). Tests general scalability on irregular structure.
-7. *Disconnected graph* --- two separate path components of 4,000 nodes each. The target
-   lies in the second component, which is unreachable from the start node. Tests correct
-   handling of unreachable nodes.
+1. *Sparse graph*:
+    approximately $2N$ edges, represented in an adjacency matrix with $oo$ for absent edges;
+2. *Dense graph*:
+   each directed edge $(i, j), i != j$ is added with probability $p = 0.5$;
+3. Edge weights are random integers in $[1, 100]$;
+4. Trials per size:
+   3 trials for $N <= 100$, 2 trials for $N > 100$.
 ]
 
 = IMPLEMENTATION
 
-Both algorithms are implemented as iterative functions in Python, avoiding recursion depth
-limits. The benchmarking harness repeats each search five times, records wall-clock nanoseconds
-via `time.perf_counter_ns`, converts to milliseconds, and stores the average.
+Both algorithms are implemented in Python and tested by an automated benchmarking harness.
+Graphs are generated deterministically per trial using seed control (`42 + trial`) to keep
+experiments reproducible.
 
-== Breadth First Search (BFS)
+== Dijkstra Algorithm
 
 _Algorithm Description:_
 
-BFS starts at the source node and visits all nodes at distance $k$ before visiting nodes at
-distance $k + 1$. It uses a FIFO queue to manage the frontier and a visited set to avoid
-revisiting nodes. BFS guarantees that the first time a node is reached it is via a shortest path
-(in terms of hop count).
+Dijkstra solves the *single-source shortest path* problem for non-negative edge weights.
+The implementation uses a binary min-heap (`heapq`) and repeatedly relaxes outgoing edges.
 
-Worst-case time complexity: $O(V + E)$. Worst-case space complexity: $O(V)$ for the queue.
+Complexity with heap: $O((V + E) log V)$, with $O(V)$ additional memory.
 
 _Pseudocode:_
 
 ```
-BFS(graph, start, target):
-    visited <- {start}
-    queue  <- deque([start])
-    while queue not empty:
-        node <- queue.popleft()
-        if node = target: return FOUND
-        for neighbor in graph[node]:
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append(neighbor)
-    return NOT FOUND
+Dijkstra(graph, source):
+    dist <- [∞] * n
+    dist[source] <- 0
+    visited <- [False] * n
+    pq <- [(0, source)]
+
+    while pq not empty:
+        (d, u) <- heappop(pq)
+        if visited[u]: continue
+        visited[u] <- True
+
+        for each vertex v:
+            if edge(u, v) exists and not visited[v]:
+                if d + w(u, v) < dist[v]:
+                    dist[v] <- d + w(u, v)
+                    heappush(pq, (dist[v], v))
+
+    return dist
 ```
 
 _Implementation:_
 
 ```python
-def bfs(graph, start, target):
-    visited = {start}
-    queue = deque([start])
-    peak_frontier = 1
-    expanded = 0
+def solve(graph, source=0):
+    n = len(graph)
+    distances = [float('inf')] * n
+    distances[source] = 0
+    visited = [False] * n
+    pq = [(0, source)]
 
-    while queue:
-        node = queue.popleft()
-        expanded += 1
-
-        if node == target:
-            return True, expanded, peak_frontier
-
-        for neighbor in graph.get(node, []):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append(neighbor)
-
-        if len(queue) > peak_frontier:
-            peak_frontier = len(queue)
-
-    return False, expanded, peak_frontier
-```
-
-== Depth First Search (DFS)
-
-_Algorithm Description:_
-
-DFS starts at the source node and explores as far as possible along each branch before
-backtracking. It uses an explicit LIFO stack instead of recursion, avoiding Python's recursion
-limit. Neighbors are pushed in reverse order so the leftmost neighbor is explored first,
-matching the natural recursive order.
-
-Worst-case time complexity: $O(V + E)$. Worst-case space complexity: $O(V)$ for the stack.
-
-_Pseudocode:_
-
-```
-DFS(graph, start, target):
-    visited <- {}
-    stack   <- [start]
-    while stack not empty:
-        node <- stack.pop()
-        if node in visited: continue
-        visited.add(node)
-        if node = target: return FOUND
-        for neighbor in reversed(graph[node]):
-            if neighbor not in visited:
-                stack.push(neighbor)
-    return NOT FOUND
-```
-
-_Implementation:_
-
-```python
-def dfs(graph, start, target):
-    visited = set()
-    stack = [start]
-    peak_frontier = 1
-    expanded = 0
-
-    while stack:
-        node = stack.pop()
-        if node in visited:
+    while pq:
+        current_dist, u = heapq.heappop(pq)
+        if visited[u]:
             continue
+        visited[u] = True
 
-        visited.add(node)
-        expanded += 1
+        for v in range(n):
+            if graph[u][v] != float('inf') and not visited[v]:
+                new_dist = current_dist + graph[u][v]
+                if new_dist < distances[v]:
+                    distances[v] = new_dist
+                    heapq.heappush(pq, (new_dist, v))
 
-        if node == target:
-            return True, expanded, peak_frontier
+    return distances
+```
 
-        neighbors = graph.get(node, [])
-        for neighbor in reversed(neighbors):
-            if neighbor not in visited:
-                stack.append(neighbor)
+== Floyd-Warshall Algorithm
 
-        if len(stack) > peak_frontier:
-            peak_frontier = len(stack)
+_Algorithm Description:_
 
-    return False, expanded, peak_frontier
+Floyd-Warshall solves the *all-pairs shortest path* problem by dynamic programming on the
+set of allowed intermediate vertices.
+
+Transition:
+
+$$
+dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+$$
+
+Complexity: $O(V^3)$ time and $O(V^2)$ memory.
+
+_Pseudocode:_
+
+```
+FloydWarshall(graph):
+    dist <- copy(graph)
+    for k in 0..n-1:
+        for i in 0..n-1:
+            for j in 0..n-1:
+                if dist[i][k] and dist[k][j] are finite:
+                    dist[i][j] <- min(dist[i][j], dist[i][k] + dist[k][j])
+    return dist
+```
+
+_Implementation:_
+
+```python
+def solve(graph):
+    n = len(graph)
+    dist = [row[:] for row in graph]
+
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if dist[i][k] != float('inf') and dist[k][j] != float('inf'):
+                    dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+
+    return dist
 ```
 
 = RESULTS
 
-The program was executed on all seven graph scenarios. Each search was repeated five times and
-the average time (ms) was recorded. The table below summarises the findings.
+The program was executed for all configured node sizes and both graph densities.
+Execution below reflects direct run of `program.py` in the project virtual environment.
 
-== Results Table
-
-#figure(
-    image("images/results_table.png", width: 100%),
-    caption: "BFS vs DFS benchmark results across all graph scenarios",
-)
-
-Key observations from the table:
-
-- In *6 of 8* scenario-target comparisons, BFS is faster than DFS; only the
-    *Deep vs Shallow (shallow)* and *Dense / Complete* cases favour DFS.
-- On *Chain / Path*, BFS is faster (10.5057 ms) than DFS (12.7548 ms), despite both traversing
-    the same 20,000-node linear structure.
-- On *Dense / Complete*, DFS is faster (187.0823 ms vs 197.9138 ms), consistent with BFS paying
-    higher frontier-management cost on very dense connectivity.
-- On *Deep vs Shallow*, both are near-instant for shallow target (0.0035 ms BFS, 0.0029 ms DFS),
-    while BFS is faster for deep target (0.4456 ms vs 0.5786 ms).
-- On *Disconnected*, both correctly return `False`, and BFS remains faster
-    (1.8360 ms vs 2.2776 ms).
-
-== Results Graph
+== Execution Time Table
 
 #figure(
-    image("images/results_graph.png", width: 100%),
-    caption: "BFS vs DFS --- average time to reach target (bar chart per scenario)",
+    image("images/exec_time.png", width: 100%),
+    caption: "Average execution time (seconds) for Dijkstra and Floyd-Warshall",
 )
 
-The bar chart reinforces the table data visually. Notable points:
+Measured values from the run are:
 
-- The *Dense / Complete* scenario clearly dominates runtime for both methods, and is the only
-    large case where DFS outperforms BFS by a noticeable margin.
-- For *Balanced Tree*, *Grid*, and *Large Random*, BFS bars are consistently lower than DFS,
-    indicating better practical performance on these datasets.
-- The *Deep vs Shallow (shallow)* bars are effectively near zero for both algorithms,
-    showing immediate target discovery.
-- The *Disconnected* case confirms correct failure handling (`Found = False`) with BFS still
-    requiring less time than DFS.
+#block[
+  #set enum(indent: 3em)
+1. At $N = 200$, Dijkstra: 0.003074 s (sparse), 0.005548 s (dense);
+2. At $N = 200$, Floyd-Warshall: 0.978077 s (sparse), 2.514712 s (dense);
+3. Floyd-Warshall is orders of magnitude slower than Dijkstra for all tested sizes;
+4. Dense graphs are slower than sparse graphs for both algorithms at every tested size.
+]
+
+== Standard Deviation Table
+
+#figure(
+    image("images/std_deviations.png", width: 100%),
+    caption: "Runtime standard deviations (seconds)",
+)
+
+The standard deviations remain relatively small compared to means, so the trend is stable and
+not caused by random fluctuations.
+
+== Performance Ratios
+
+#figure(
+    image("images/performance.png", width: 100%),
+    caption: "Derived performance ratios (dense/sparse and Dijkstra/Floyd-Warshall)",
+)
+
+Important ratio-based observations:
+
+1. Dijkstra dense/sparse ratio is between approximately 1.19x and 3.72x;
+2. Floyd-Warshall dense/sparse ratio is between approximately 1.52x and 2.57x;
+3. Dijkstra/Floyd-Warshall ratio is near 0.00x-0.08x, confirming a large performance gap.
+
+== Graphical Analysis
+
+#figure(
+    image("images/plot.png", width: 100%),
+    caption: "Runtime scaling with node count for sparse and dense graphs",
+)
+
+From the plots:
+
+1. Dijkstra curves increase moderately with $N$ and stay in the millisecond range up to 200 nodes;
+2. Floyd-Warshall curves rise steeply (roughly cubic trend), crossing near and above 1 second;
+3. Dense graph curves are consistently above sparse graph curves;
+4. Increasing nodes has a much stronger impact on Floyd-Warshall than on Dijkstra.
 
 = CONCLUSION
 
-The empirical results confirm that while DFS and BFS share the same asymptotic complexity
-$O(V + E)$, their practical performance differs markedly depending on graph structure and
-target placement.
+The laboratory objectives were achieved. Dynamic programming principles were studied and applied,
+both Dijkstra and Floyd-Warshall algorithms were implemented in Python, and an empirical analysis
+was carried out for sparse and dense graphs with increasing numbers of nodes. The obtained tables
+and plots allowed a direct comparison between theoretical expectations and practical behavior.
 
-*BFS* is the stronger overall performer in this experiment, delivering lower average time in most
-tested scenarios (chain/path, balanced tree, grid, deep target, large random, disconnected).
-It remains especially suitable when shortest-path guarantees are required.
+The results show that *Dijkstra is substantially faster* than Floyd-Warshall in all tested
+configurations. For $N = 200$, Dijkstra remains in the millisecond range, while Floyd-Warshall
+requires approximately 1 to 2.5 seconds depending on graph density. The experiments also confirm
+that increasing graph density increases runtime for both algorithms across all tested values of
+$N$.
 
-*DFS* still has competitive behavior and wins in specific cases, particularly the dense/complete
-graph and the shallow-target microcase, where stack-based traversal overhead is lower than BFS
-frontier expansion cost.
+Scalability differs significantly between the two methods. Dijkstra grows much more slowly with
+input size, while Floyd-Warshall follows the expected $O(V^3)$ trend and becomes expensive as
+the number of nodes grows. Therefore, for practical shortest-path tasks on larger graphs,
+especially sparse ones, Dijkstra is the recommended choice. Floyd-Warshall remains appropriate
+when all-pairs shortest paths are required and the graph size is limited.
 
-For *grid / pathfinding* scenarios both algorithms perform similarly, though BFS would be
-preferred in practice because it guarantees the shortest path.
-
-For graphs with *disconnected components*, both correctly terminate with "not found" after
-exhausting the reachable subgraph --- no special handling is required beyond the standard visited
-set.
-
-In conclusion, algorithm choice should be guided by graph structure and query type:
-use BFS as the default for robust practical performance and shortest-path correctness, while DFS
-remains a good alternative for specific dense or extremely shallow-target cases.
+Overall, the experimental results are consistent with theoretical complexity analysis and confirm
+the importance of selecting the algorithm based on both task type (single-source vs all-pairs)
+and graph characteristics (size and density).
 
 = ANNEX
 
 #show link: underline
-_#link("https://github.com/colinnnnnnnnnnn/aa-labs/tree/master/lab3")[Github Repository]_
+_#link("https://github.com/colinnnnnnnnnnn/aa-labs/tree/master/lab4")[Github Repository]_
